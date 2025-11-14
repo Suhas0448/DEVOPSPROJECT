@@ -2,19 +2,17 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USER = credentials('dockerhub-username')
-        DOCKERHUB_PSW  = credentials('dockerhub-password')
+        DOCKER = credentials('dockerhub-username')
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/Suhas0448/DEVOPSPROJECT.git'
             }
         }
 
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
                 bat """
                 echo Building Docker image...
@@ -26,14 +24,14 @@ pipeline {
         stage('Docker Login & Push') {
             steps {
                 bat """
-                echo Logging in to DockerHub...
-                echo %DOCKERHUB_PSW% | docker login -u %DOCKERHUB_USER% --password-stdin
+                echo Logging in...
+                docker login -u ${DOCKER_USR} -p ${DOCKER_PSW}
 
-                echo Tagging image...
-                docker tag jenkins-demo %DOCKERHUB_USER%/jenkins-demo:latest
+                echo Tagging...
+                docker tag jenkins-demo ${DOCKER_USR}/jenkins-demo:latest
 
-                echo Pushing image...
-                docker push %DOCKERHUB_USER%/jenkins-demo:latest
+                echo Pushing...
+                docker push ${DOCKER_USR}/jenkins-demo:latest
                 """
             }
         }
@@ -41,10 +39,10 @@ pipeline {
 
     post {
         success {
-            echo "Build successful!"
+            echo "Build SUCCESS!"
         }
         failure {
-            echo "Build failed!"
+            echo "Build FAILED!"
         }
     }
 }
