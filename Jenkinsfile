@@ -17,14 +17,18 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${DOCKER_IMAGE}:latest ."
+                bat """
+                docker build -t %DOCKER_IMAGE%:latest .
+                """
             }
         }
 
-        stage('Docker Push') {
+        stage('Docker Login & Push') {
             steps {
-                sh "echo ${DOCKERHUB_PSW} | docker login -u ${DOCKERHUB_USER} --password-stdin"
-                sh "docker push ${DOCKER_IMAGE}:latest"
+                bat """
+                echo %DOCKERHUB_PSW% | docker login -u %DOCKERHUB_USER% --password-stdin
+                docker push %DOCKER_IMAGE%:latest
+                """
             }
         }
     }
@@ -33,14 +37,14 @@ pipeline {
         success {
             emailext(
                 to: "example@gmail.com",
-                subject: "SUCCESS: Jenkins Build",
+                subject: "Build SUCCESS",
                 body: "Pipeline executed successfully!"
             )
         }
         failure {
             emailext(
                 to: "example@gmail.com",
-                subject: "FAILURE: Jenkins Build",
+                subject: "Build FAILED",
                 body: "Pipeline failed!"
             )
         }
