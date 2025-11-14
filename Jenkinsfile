@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKERHUB_USER = credentials('dockerhub-username')
         DOCKERHUB_PSW  = credentials('dockerhub-password')
-        DOCKER_IMAGE = "${DOCKERHUB_USER}/jenkins-demo"
     }
 
     stages {
@@ -18,7 +17,8 @@ pipeline {
         stage('Docker Build') {
             steps {
                 bat """
-                docker build -t %DOCKER_IMAGE%:latest .
+                echo Building Docker image...
+                docker build -t jenkins-demo .
                 """
             }
         }
@@ -26,8 +26,14 @@ pipeline {
         stage('Docker Login & Push') {
             steps {
                 bat """
+                echo Logging in to DockerHub...
                 echo %DOCKERHUB_PSW% | docker login -u %DOCKERHUB_USER% --password-stdin
-                docker push %DOCKER_IMAGE%:latest
+
+                echo Tagging image...
+                docker tag jenkins-demo %DOCKERHUB_USER%/jenkins-demo:latest
+
+                echo Pushing image...
+                docker push %DOCKERHUB_USER%/jenkins-demo:latest
                 """
             }
         }
@@ -35,18 +41,10 @@ pipeline {
 
     post {
         success {
-            emailext(
-                to: "example@gmail.com",
-                subject: "Build SUCCESS",
-                body: "Pipeline executed successfully!"
-            )
+            echo "Build successful!"
         }
         failure {
-            emailext(
-                to: "example@gmail.com",
-                subject: "Build FAILED",
-                body: "Pipeline failed!"
-            )
+            echo "Build failed!"
         }
     }
 }
